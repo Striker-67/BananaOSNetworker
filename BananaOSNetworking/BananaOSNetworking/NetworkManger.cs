@@ -15,7 +15,7 @@ namespace BananaOS.Networking
 
     public class NetworkManager : MonoBehaviourPunCallbacks
     {
-        public Dictionary<Player, GameObject> players = new Dictionary<Player, GameObject>();
+        public static Dictionary<Player, GameObject> players = new Dictionary<Player, GameObject>();
         string pathforwatch = "Player Objects/Local VRRig/Local Gorilla Player/RigAnchor/rig/body/shoulder.L/upper_arm.L/forearm.L/hand.L/Watch";
 
         public override void OnJoinedRoom()
@@ -38,13 +38,10 @@ namespace BananaOS.Networking
                     CloneWatch.GetComponent<MeshRenderer>().material.mainTexture = BananaOSNetworking.Plugin.Background.mainTexture;
                     clonescreen.transform.GetChild(0).gameObject.SetActive(true);
                     clonescreen.transform.GetChild(1).transform.GetComponentInChildren<TextMeshProUGUI>().text = "<align=\"center\">\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n <color=\"yellow\">B A N A N A   <color=\"white\">O S</align>";
-                    Destroy(CloneWatch.transform.GetComponent<WatchButton>());
-                    Destroy(clonescreen.transform.GetChild(1).transform.GetChild(1).transform.GetChild(0).GetComponent<WatchButton>());
-                    Destroy(clonescreen.transform.GetChild(1).transform.GetChild(1).transform.GetChild(1).GetComponent<WatchButton>());
-                    Destroy(clonescreen.transform.GetChild(1).transform.GetChild(1).transform.GetChild(2).GetComponent<WatchButton>());
-                    Destroy(clonescreen.transform.GetChild(1).transform.GetChild(1).transform.GetChild(3).GetComponent<WatchButton>());
-                    Destroy(clonescreen.transform.GetChild(1).transform.GetChild(1).transform.GetChild(4).GetComponent<WatchButton>());
-                    Destroy(clonescreen.transform.GetChild(1).transform.GetChild(1).transform.GetChild(5).GetComponent<WatchButton>());
+                    foreach (WatchButton button in clonescreen.transform.GetComponentsInChildren<WatchButton>())
+                    {
+                        Destroy(button);
+                    }
 
                     players.Add(player, CloneWatch);
                     if ((bool)player.CustomProperties["PanelOpen"])
@@ -67,12 +64,18 @@ namespace BananaOS.Networking
                 Destroy(Watches);
             }
             players.Clear();
+            MonkeWatch.Instance.UpdateScreen();
         }
         public override void OnPlayerLeftRoom(Player otherPlayer)
         {
+            if (players.ContainsKey(otherPlayer))
+            {
+                Destroy(players[otherPlayer].gameObject);
+                players.Remove(otherPlayer);
+                MonkeWatch.Instance.UpdateScreen();
+            }
 
-           Destroy(players[otherPlayer].gameObject);
-            players.Remove(otherPlayer);
+           
         }
         public override void OnPlayerEnteredRoom(Player newPlayer)
         {
@@ -94,13 +97,10 @@ namespace BananaOS.Networking
                     CloneWatch.GetComponent<MeshRenderer>().material.mainTexture = BananaOSNetworking.Plugin.Background.mainTexture;
                     clonescreen.transform.GetChild(0).gameObject.SetActive(true);
                     clonescreen.transform.GetChild(1).transform.GetComponentInChildren<TextMeshProUGUI>().text = "<align=\"center\">\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n <color=\"yellow\">B A N A N A   <color=\"white\">O S</align>";
-                    Destroy(CloneWatch.transform.GetComponent<WatchButton>());
-                    Destroy(clonescreen.transform.GetChild(1).transform.GetChild(1).transform.GetChild(0).GetComponent<WatchButton>());
-                    Destroy(clonescreen.transform.GetChild(1).transform.GetChild(1).transform.GetChild(1).GetComponent<WatchButton>());
-                    Destroy(clonescreen.transform.GetChild(1).transform.GetChild(1).transform.GetChild(2).GetComponent<WatchButton>());
-                    Destroy(clonescreen.transform.GetChild(1).transform.GetChild(1).transform.GetChild(3).GetComponent<WatchButton>());
-                    Destroy(clonescreen.transform.GetChild(1).transform.GetChild(1).transform.GetChild(4).GetComponent<WatchButton>());
-                    Destroy(clonescreen.transform.GetChild(1).transform.GetChild(1).transform.GetChild(5).GetComponent<WatchButton>());
+                    foreach(WatchButton button in clonescreen.transform.GetComponentsInChildren<WatchButton>())
+                    {
+                        Destroy(button);
+                    }
                     players.Add(newPlayer, CloneWatch);
                     if ((bool)newPlayer.CustomProperties["PanelOpen"])
                     {
@@ -111,6 +111,7 @@ namespace BananaOS.Networking
                         players[newPlayer].transform.Find("Background(Clone)").transform.localScale = Vector3.zero;
                         
                     }
+                    MonkeWatch.Instance.UpdateScreen();
                 }
                    
             }
@@ -120,15 +121,24 @@ namespace BananaOS.Networking
         {
             if(targetPlayer != PhotonNetwork.LocalPlayer)
             {
-                if ((bool)changedProps["PanelOpen"])
+                try
                 {
-                    players[targetPlayer].transform.Find("Background(Clone)").transform.localScale = new Vector3(2, 2, 2);
+                    if ((bool)changedProps["PanelOpen"])
+                    {
+                        players[targetPlayer].transform.Find("Background(Clone)").transform.localScale = new Vector3(2, 2, 2);
+
+                    }
+                    else
+                    {
+                        players[targetPlayer].transform.Find("Background(Clone)").transform.localScale = Vector3.zero;
+                    }
 
                 }
-                else
+                catch
                 {
-                    players[targetPlayer].transform.Find("Background(Clone)").transform.localScale = Vector3.zero;
+                    Debug.Log("Menu didnt load in so it erroered ):");
                 }
+               
             }
            
         }

@@ -6,17 +6,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using Unity.Burst.Intrinsics;
 using UnityEngine;
-using Utilla;
 
 namespace BananaOSNetworking
 {
-    /// <summary>
-    /// This is your mod's main class.
-    /// </summary>
-
-    /* This attribute tells Utilla to look for [ModdedGameJoin] and [ModdedGameLeave] */
-    [ModdedGamemode]
     [BepInPlugin(PluginInfo.GUID, PluginInfo.Name, PluginInfo.Version)]
     public class Plugin : BaseUnityPlugin
     {
@@ -25,7 +19,7 @@ namespace BananaOSNetworking
         public static Texture2D texture;
         public static Material Background;
         public static List<string> Backgrounds = new List<string>();
-        string filespath = Path.Combine(Path.GetDirectoryName(typeof(Plugin).Assembly.Location), "CustomDefaults");
+        string filespath = Path.Combine(BepInEx.Paths.PluginPath.ToString(), "CustomDefaults");
 
         void Start()
         {
@@ -34,6 +28,7 @@ namespace BananaOSNetworking
 
         void OnGameInitialized()
         {
+            Debug.Log(filespath);
             if (!Directory.Exists(filespath))
             {
                 Directory.CreateDirectory(filespath);
@@ -45,31 +40,36 @@ namespace BananaOSNetworking
             PhotonNetwork.SetPlayerCustomProperties(Hash);
 
             gameObject.AddComponent<NetworkManager>();
-
-            Background = new Material(Shader.Find("GorillaTag/UberShader"));
-            string AppPath = Application.dataPath;
-            AppPath = AppPath.Replace("/Gorilla Tag_Data", "");
-            string path = AppPath + @"/BepInEx/plugins/CustomDefaults/";
-
-            Byte[] bytes = File.ReadAllBytes(Directory.GetFiles(path, "*.png")[0]);
-
-
-            Debug.Log(Directory.GetFiles(path, "*.png")[0]);
-            Texture2D loadTexture = new Texture2D(1, 1);
-            ImageConversion.LoadImage(loadTexture, bytes);
-            loadTexture.Apply();
-
-            Background.mainTexture = loadTexture;
-
-            DirectoryInfo dir = new DirectoryInfo(path);
-            FileInfo[] info = dir.GetFiles("*.png");
-
-            foreach (var image in info)
+            try
             {
-                Backgrounds.Add(image.Name + " Image\n");
-                Debug.Log(image);
-            }
+                Background = new Material(Shader.Find("GorillaTag/UberShader"));
+                string path = filespath;
 
+                Byte[] bytes = File.ReadAllBytes(Directory.GetFiles(path, "*.png")[0]);
+
+
+                Debug.Log(Directory.GetFiles(path, "*.png")[0]);
+                Texture2D loadTexture = new Texture2D(1, 1);
+                ImageConversion.LoadImage(loadTexture, bytes);
+                loadTexture.Apply();
+
+                Background.mainTexture = loadTexture;
+
+                DirectoryInfo dir = new DirectoryInfo(path);
+                FileInfo[] info = dir.GetFiles("*.png");
+
+                foreach (var image in info)
+                {
+                    Backgrounds.Add(image.Name + " Image\n");
+                    Debug.Log(image);
+                }
+
+            }
+            catch (Exception e)
+            {
+                Debug.Log("):");
+            }
+           
         }
         public void Update()
         {
